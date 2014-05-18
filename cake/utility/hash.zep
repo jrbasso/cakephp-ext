@@ -30,4 +30,141 @@ class Hash {
 		return loopData;
 	}
 
+	public static function extract(array data, string path) -> array {
+		var tokens, token, conditions, tmp, item, k, v, next, filter, context = [];
+		string key = "__set_item__";
+
+		if empty path {
+			return data;
+		}
+
+/**
+	Commenting this part out because the return is causing PHP to crash.
+	This piece of code is just for optimization, so the functionality will
+	work anyway.
+	It seems to be some bug on zephir.
+
+		if !memstr(path, "{") && !memstr(path, "[") {
+			let tmp = self::get(data, path);
+			return is_array(tmp) ? tmp : [tmp];
+		}
+*/
+
+		if strpos(path, "[") === false {
+			let tokens = explode(".", path);
+		} else {
+			let tokens = String2::tokenize(path, ".", "[", "]");
+		}
+
+		let context[key] = [data];
+		for token in tokens {
+			let next = [];
+
+			let tmp = self::_splitConditions(token);
+			let token = tmp[0];
+			let conditions = tmp[1];
+
+			for item in context[key] {
+				if !is_array(item) {
+					let item = is_null(item) ? [] : [item];
+				}
+				for k, v in item {
+					if self::_matchToken(k, token) {
+						let next[] = v;
+					}
+				}
+			}
+
+			// Filter for attributes.
+			if conditions {
+				let filter = [];
+				for item in next {
+					if is_array(item) && self::_matches(item, conditions) {
+						let filter[] = item;
+					}
+				}
+				let next = filter;
+			}
+			let context[key] = next;
+		}
+		return context[key]; 
+	}
+
+	protected static function _splitConditions(token) -> array {
+		var conditions, position;
+
+		let conditions = false;
+		let position = strpos(token, "[");
+		if position !== false {
+			let conditions = substr(token, position);
+			let token = substr(token, 0, position);
+		}
+
+		return [token, conditions];
+	}
+
+	protected static function _matchToken(key, token) -> bool {
+		if token === "{n}" {
+			return is_numeric(key);
+		}
+		if token === "{s}" {
+			return is_string(key);
+		}
+		if is_numeric(token) {
+			return key == token;
+		}
+		return key === token;
+	}
+
+	protected static function _matches(data, selector) -> bool {
+		var conditions = null, cond, attr, op, val, prop;
+
+		preg_match_all(
+			"/(\\[ (?P<attr>[^=><!]+?) (\\s* (?P<op>[><!]?[=]|[><]) \\s* (?P<val>(?:\\/.*?\\/ | [^\\]]+)) )? \\])/x",
+			selector,
+			conditions,
+			PREG_SET_ORDER
+		);
+
+		for cond in conditions {
+			let attr = cond["attr"];
+			let op = isset cond["op"] ? cond["op"] : null;
+			let val = isset cond["val"] ? cond["val"] : null;
+
+			// Presence test.
+			if empty op && empty val && !isset data[attr] {
+				return false;
+			}
+
+			// Empty attribute = fail.
+			if !isset data[attr] {
+				return false;
+			}
+
+			let prop = data[attr];
+			if prop === true || prop === false {
+				return prop ? "true" : "false";
+			}
+
+			// Pattern matches and other operators.
+			if op === "=" && val && val[0] === "/" {
+				if preg_match(val, prop) {
+					return false;
+				}
+			} else {
+				if (
+					(op === "=" && prop != val) ||
+					(op === "!=" && prop == val) ||
+					(op === ">" && prop <= val) ||
+					(op === "<" && prop >= val) ||
+					(op === ">=" && prop < val) ||
+					(op === "<=" && prop > val)
+				) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
 }
