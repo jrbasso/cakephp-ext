@@ -297,4 +297,84 @@ class Hash {
 		return data;
 	}
 
+	public static function combine(data, keyPath, valuePath = null, groupPath = null) -> array {
+		var format, keys, vals = null, group, out = [], i;
+
+		if empty data {
+			return [];
+		}
+
+		if typeof keyPath === "array" {
+			let format = array_shift(keyPath);
+			let keys = self::format(data, keyPath, format);
+		} else {
+			let keys = self::extract(data, keyPath);
+		}
+		if empty keys {
+			return [];
+		}
+
+		if !empty valuePath && typeof valuePath === "array" {
+			let format = array_shift(valuePath);
+			let vals = self::format(data, valuePath, format);
+		} else {
+			if !empty valuePath {
+				let vals = self::extract(data, valuePath);
+			}
+		}
+		if empty vals {
+			let vals = array_fill(0, count(keys), null);
+		}
+
+		if count(keys) !== count(vals) {
+			throw new \RuntimeException(
+				"Hash::combine() needs an equal number of keys + values."
+			);
+		}
+
+		if groupPath !== null {
+			let group = self::extract(data, groupPath);
+			if !empty group {
+				for i in range(0, count(keys) - 1) {
+					if !isset group[i] {
+						let group[i] = 0;
+					}
+					let out[group[i]][keys[i]] = vals[i];
+				}
+				return out;
+			}
+		}
+		if empty vals {
+			return [];
+		}
+		return array_combine(keys, vals);
+	}
+
+	public static function format(data, paths, format) -> array {
+		var extracted = [], count, i, j, out = [], countTwo, args = [];
+
+		let count = count(paths);
+		if !count {
+			return [];
+		}
+
+		for i in range(0, count - 1) {
+			let extracted[] = self::extract(data, paths[i]);
+		}
+		let data = extracted;
+		let count = count(data[0]);
+
+		let countTwo = count(data);
+		for j in range (0, count - 1) {
+			let args = [];
+			for i in range (0, countTwo - 1) {
+				if isset data[i][j] {
+					let args[] = data[i][j];
+				}
+			}
+			let out[] = vsprintf(format, args);
+		}
+		return out;
+	}
+
 }
