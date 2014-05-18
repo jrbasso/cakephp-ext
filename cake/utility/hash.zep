@@ -167,4 +167,76 @@ class Hash {
 		return true;
 	}
 
+	public static function insert(array data, string path, values = null) -> array {
+		bool noTokens;
+		var tokens, token, nextPath, tmp, conditions, k, v;
+
+		let noTokens = !memstr(path, "[");
+		if noTokens && !memstr(path, ".") {
+			let data[path] = values;
+			return data;
+		}
+
+		if noTokens {
+			let tokens = explode(".", path);
+		} else {
+			let tokens = String2::tokenize(path, ".", "[", "]");
+		}
+
+		if noTokens && !memstr(path, "{") {
+			return self::_simpleOp("insert", data, tokens, values);
+		}
+
+		let token = array_shift(tokens);
+		let nextPath = implode(".", tokens);
+
+		let tmp = self::_splitConditions(token);
+		let token = tmp[0];
+		let conditions = tmp[1];
+
+		for k, v in data {
+			if self::_matchToken(k, token) {
+				if conditions && self::_matches(v, conditions) {
+					let data[k] = array_merge(v, values);
+					continue;
+				}
+				if !conditions {
+					let data[k] = self::insert(v, nextPath, values);
+				}
+			}
+		}
+		return data;
+	}
+
+	/**
+	 * This method is different from CakePHP because Zephir doesn't
+	 * support variables by reference
+	 */
+	protected static function _simpleOp(string op, data, path, values = null) -> array {
+		int count;
+		var key;
+
+		let count = count(path);
+		if op === "insert" {
+			if count === 0 {
+				return data;
+			}
+			let key = array_shift(path);
+			if count === 1 {
+				let data[key] = values;
+			} else {
+				if !isset data[key] {
+					let data[key] = [];
+				}
+				let data[key] = self::_simpleOp(op, data[key], path, values);
+			}
+			return data;
+		} else {
+			if op === "remove" {
+				// @todo implement
+			}
+		}
+		return [];
+	}
+
 }
