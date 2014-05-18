@@ -4,11 +4,18 @@ class Hash {
 
 	public static function get(data, path, defaultValue = null) {
 		var parts, key, loopData;
+		bool isString;
 
 		if empty data {
 			return defaultValue;
 		}
-		if is_string(path) || is_numeric(path) {
+
+		let isString = (bool)is_string(path);
+		if isString && strpos(path, ".") === false {
+			return isset data[path] ? data[path] : defaultValue;
+		}
+
+		if isString || is_numeric(path) {
 			let parts = explode(".", path);
 		} else {
 			let parts = path;
