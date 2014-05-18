@@ -217,11 +217,12 @@ class Hash {
 		var key;
 
 		let count = count(path);
+		if count === 0 {
+			return data;
+		}
+		let key = array_shift(path);
+
 		if op === "insert" {
-			if count === 0 {
-				return data;
-			}
-			let key = array_shift(path);
 			if count === 1 {
 				let data[key] = values;
 			} else {
@@ -233,10 +234,67 @@ class Hash {
 			return data;
 		} else {
 			if op === "remove" {
-				// @todo implement
+				if count === 1 {
+					unset data[key];
+					return data;
+				}
+				if !isset data[key] {
+					return data;
+				}
+				let data[key] = self::_simpleOp(op, data[key], path, values);
 			}
 		}
 		return [];
+	}
+
+	public static function remove(data, string path) -> array {
+		bool noTokens, noExpansion;
+		var tokens, token, nextPath, tmp, conditions, k, v, match;
+
+		let noTokens = !memstr(path, "[");
+		let noExpansion = !memstr(path, "{");
+
+		if noExpansion && noTokens && !memstr(path, ".") {
+			unset data[path];
+			return data;
+		}
+
+		let tokens = noTokens ? explode(".", path) : String2::tokenize(path, ".", "[", "]");
+
+/**
+ * Similar of extract method, this code is causing the PHP to crash,
+ * but it is also only for performance and can be skipped for now.
+ *
+		if noExpansion && noTokens {
+			return self::_simpleOp("remove", data, tokens, null);
+		}
+*/
+
+		let token = array_shift(tokens);
+		let nextPath = implode(".", tokens);
+
+		let tmp = self::_splitConditions(token);
+		let token = tmp[0];
+		let conditions = tmp[1];
+
+		for k, v in data {
+			let match = self::_matchToken(k, token);
+			if match && typeof v === "array" {
+				if conditions && self::_matches(v, conditions) {
+					unset data[k];
+					continue;
+				}
+				let data[k] = self::remove(v, nextPath);
+				if empty data[k] {
+					unset data[k];
+				}
+			} else {
+				if match {
+					unset data[k];
+				}
+			}
+		}
+		return data;
 	}
 
 }
