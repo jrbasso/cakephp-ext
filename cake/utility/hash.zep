@@ -421,4 +421,37 @@ class Hash {
 		return !empty results;
 	}
 
+	public static function filter(data, callback = null) -> array {
+		var k, v;
+
+		if callback === null {
+			let callback = ["Cake\\Utility\\Hash", "_filter"];
+		}
+
+		for k, v in data {
+			if typeof v === "array" {
+				let data[k] = self::filter(v, callback);
+			}
+		}
+		return array_filter(data, callback);
+	}
+
+/**
+ * A little different from CakePHP implementation because the
+ * different type treatment on comparisons
+ *
+ * Also, this method is supposed to be protected, but zephir seems
+ * to not treat local callbacks very well. Maybe it is a limitation on
+ * PHP extensions, but either way setting it to public for while
+ */
+	public static function _filter(value) {
+		if typeof value === "boolean" && value == false {
+			return false;
+		}
+		return
+			(typeof value === "integer" && value === 0) ||
+			(typeof value === "string" && value === "0") ||
+			!empty(value);
+	}
+
 }
