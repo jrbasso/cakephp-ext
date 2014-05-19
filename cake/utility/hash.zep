@@ -532,4 +532,11 @@ class Hash {
 		return result;
 	}
 
+	public static function numeric(data) -> bool {
+		if empty data {
+			return data;
+		}
+		return data === array_filter(data, "is_numeric");
+	}
+
 }
