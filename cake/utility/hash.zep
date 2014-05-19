@@ -377,4 +377,38 @@ class Hash {
 		return out;
 	}
 
+	public static function contains(data, needle) -> bool {
+		var stack = [], key, val, next, tmp;
+
+		if empty data || empty needle {
+			return false;
+		}
+
+		while !empty needle {
+			let key = key(needle);
+			let val = needle[key];
+			unset needle[key];
+
+			if isset data[key] && typeof val === "array" {
+				let next = data[key];
+				unset data[key];
+
+				if !empty val {
+					let stack[] = [val, next];
+				}
+			} else {
+				if !isset data[key] || data[key] != val {
+					return false;
+				}
+			}
+
+			if empty needle && !empty stack {
+				let tmp = array_pop(stack);
+				let needle = tmp[0];
+				let data = tmp[1];
+			}
+		}
+		return true;
+	}
+
 }
