@@ -567,4 +567,34 @@ class Hash {
 		return max(depth);
 	}
 
+	public static function map(data, path, func) -> array {
+		var values;
+
+		let values = self::extract(data, path);
+		if typeof values !== "array" {
+			let values = [values];
+		}
+		return array_map(func, values);
+	}
+
+	public static function reduce(data, path, func) {
+		var values;
+
+		let values = self::extract(data, path);
+		if typeof values !== "array" {
+			let values = [values];
+		}
+		return array_reduce(values, func);
+	}
+
+	public static function apply(data, path, func) {
+		var values;
+
+		let values = self::extract(data, path);
+		if typeof values !== "array" {
+			let values = [values];
+		}
+		return call_user_func(func, values);
+	}
+
 }
