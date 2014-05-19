@@ -484,4 +484,52 @@ class Hash {
 		return result;
 	}
 
+	public static function expand(data, separator = ".") {
+		var result = [], flat, value, keys, child = [], tmp, k;
+
+		for flat, value in data {
+			let keys = explode(separator, flat);
+			let keys = array_reverse(keys);
+			let child = [];
+			let child[keys[0]] = value;
+			array_shift(keys);
+			for k in keys {
+				let tmp = child;
+				let child = [];
+				let child[k] = tmp;
+			}
+			let result = self::merge(result, child);
+		}
+		return result;
+	}
+
+	public static function merge(data, merge, m2 = null, m3 = null, m4 = null, m5 = null, m6 = null, m7 = null, m8 = null, m9 = null, m10 = null) {
+		var args, result, arg, tmp, key, val;
+
+		let args = func_get_args();
+		let result = current(args);
+
+		let arg = next(args);
+		while (arg !== false) {
+			if typeof arg === "null" {
+				let arg = next(args);
+				continue;
+			}
+			let tmp = typeof arg === "array" ? arg : [arg];
+			for key, val in tmp {
+				if isset result[key] && typeof result[key] === "array" && typeof val === "array" {
+					let result[key] = self::merge(result[key], val);
+				} else {
+					if is_int(key) && isset result[key] {
+						let result[] = val;
+					} else {
+						let result[key] = val;
+					}
+				}
+			}
+			let arg = next(args);
+		}
+		return result;
+	}
+
 }
