@@ -411,4 +411,14 @@ class Hash {
 		return true;
 	}
 
+	public static function check(data, path) -> bool {
+		var results;
+
+		let results = self::extract(data, path);
+		if typeof results !== "array" {
+			return false;
+		}
+		return !empty results;
+	}
+
 }
