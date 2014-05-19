@@ -454,4 +454,34 @@ class Hash {
 			!empty(value);
 	}
 
+	public static function flatten(data, separator = ".") -> array {
+		var result = [], stack = [], path = "", key, element, tmp;
+
+		reset(data);
+		while !empty data {
+			let key = key(data);
+			let element = data[key];
+			unset data[key];
+
+			if typeof element === "array" && !empty element {
+				if !empty data {
+					let stack[] = [data, path];
+				}
+				let data = element;
+				reset(data);
+				let path = path . key . separator;
+			} else {
+				let result[path . key] = element;
+			}
+
+			if empty data && !empty stack {
+				let tmp = array_pop(stack);
+				let data = tmp[0];
+				let path = tmp[1];
+				reset(data);
+			}
+		}
+		return result;
+	}
+
 }
