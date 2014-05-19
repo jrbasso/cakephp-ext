@@ -539,4 +539,32 @@ class Hash {
 		return data === array_filter(data, "is_numeric");
 	}
 
+	public static function dimensions(data) -> int {
+		var depth = 1, elem;
+
+		if empty data {
+			return 0;
+		}
+		let elem = array_shift(data);
+		while elem {
+			if typeof elem !== "array" {
+				break;
+			}
+			let depth++;
+			let data = elem;
+			let elem = array_shift(data);
+		}
+		return depth;
+	}
+
+	public static function maxDimensions(data) -> int {
+		var depth = [], value;
+		if typeof data === "array" && reset(data) !== false {
+			for value in data {
+				let depth[] = self::dimensions(typeof value === "array" ? value : [value]) + 1;
+			}
+		}
+		return max(depth);
+	}
+
 }
