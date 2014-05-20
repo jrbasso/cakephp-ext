@@ -670,4 +670,26 @@ class Hash {
 		return stack;
 	}
 
+	public static function diff(data, compare) -> array {
+		var key, intersection;
+
+		if empty data {
+			return compare;
+		}
+		if empty compare {
+			return data;
+		}
+		let intersection = array_intersect_key(data, compare);
+		let key = key(intersection);
+		while key !== null {
+			if data[key] == compare[key] {
+				unset data[key];
+				unset compare[key];
+			}
+			next(intersection);
+			let key = key(intersection);
+		}
+		return data + compare;
+	}
+
 }
