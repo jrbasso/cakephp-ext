@@ -597,4 +597,77 @@ class Hash {
 		return call_user_func(func, values);
 	}
 
+	public static function sort(data, path, dir, type = "regular") -> array {
+		var originalKeys, numeric, sortValues, sortCount, dataCount, result, keys, values, sorted = [], k;
+
+		if empty data {
+			return [];
+		}
+
+		let originalKeys = array_keys(data);
+		let numeric = is_numeric(implode("", originalKeys));
+		if numeric {
+			let data = array_values(data);
+		}
+		let sortValues = self::extract(data, path);
+		let sortCount = count(sortValues);
+		let dataCount = count(data);
+
+		if sortCount < dataCount {
+			let sortValues = array_pad(sortValues, dataCount, null);
+		}
+		let result = self::_squash(sortValues);
+		let keys = self::extract(result, "{n}.id");
+		let values = self::extract(result, "{n}.value");
+
+		let dir = strtolower(dir) == "asc" ? SORT_ASC : SORT_DESC;
+		let type = strtolower(type);
+
+		if type === "numeric" {
+			let type = SORT_NUMERIC;
+		} else {
+			if type === "string" {
+				let type = SORT_STRING;
+			} else {
+				if type === "natural" {
+					let type = SORT_NATURAL;
+				} else {
+					let type = SORT_REGULAR;
+				}
+			}
+		}
+		array_multisort(values, dir, type, keys, dir, type);
+		let keys = array_unique(keys);
+
+		for k in keys {
+			if numeric {
+				let sorted[] = data[k];
+				continue;
+			}
+			if isset originalKeys[k] {
+				let sorted[originalKeys[k]] = data[originalKeys[k]];
+			} else {
+				let sorted[k] = data[k];
+			}
+		}
+		return sorted;
+	}
+
+	protected static function _squash(data, key = null) -> array {
+		var stack = [], k, r, id;
+
+		for k, r in data {
+			let id = k;
+			if key !== null {
+				let id = key;
+			}
+			if typeof r === "array" && !empty r {
+				let stack = array_merge(stack, self::_squash(r, id));
+			} else {
+				let stack[] = ["id": id, "value": r];
+			}
+		}
+		return stack;
+	}
+
 }
