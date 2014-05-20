@@ -692,4 +692,26 @@ class Hash {
 		return data + compare;
 	}
 
+	public static function mergeDiff(data, compare) -> array {
+		var key, value;
+
+		if empty data && !empty compare {
+			return compare;
+		}
+		if empty compare {
+			return data;
+		}
+
+		for key, value in compare {
+			if !isset data[key] {
+				let data[key] = value;
+			} else {
+				if typeof value == "array" {
+					let data[key] = self::mergeDiff(data[key], compare[key]);
+				}
+			}
+		}
+		return data;
+	}
+
 }
