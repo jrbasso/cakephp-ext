@@ -714,4 +714,31 @@ class Hash {
 		return data;
 	}
 
+	public static function normalize(data, assoc = true) -> array {
+		var keys, count, numeric = true, newList = [], i;
+
+		let keys = array_keys(data);
+		let count = count(keys);
+
+		if !assoc {
+			for i in range(0, count - 1) {
+				if !is_int(keys[i]) {
+					let numeric = false;
+					break;
+				}
+			}
+		}
+		if !numeric || assoc {
+			for i in range(0, count - 1) {
+				if is_int(keys[i]) {
+					let newList[data[keys[i]]] = null;
+				} else {
+					let newList[keys[i]] = data[keys[i]];
+				}
+			}
+			let data = newList;
+		}
+		return data;
+	}
+
 }
