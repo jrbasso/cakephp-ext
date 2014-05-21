@@ -741,4 +741,67 @@ class Hash {
 		return data;
 	}
 
+	public static function nest(data, options = []) -> array {
+		throw new \Exception("Buggy");
+/*
+		var alias, defaultOptions, output = [], idMap = [], ids, idKeys, parentKeys, result, tmp, root, id, parentId, i;
+		if !data {
+			return data;
+		}
+
+		let alias = key(current(data));
+		let defaultOptions = [
+			"idPath": "{n}." . alias . ".id",
+			"parentPath": "{n}." . alias . ".parent_id",
+			"children": "children",
+			"root": null
+		];
+		let options += defaultOptions;
+
+		let ids = self::extract(data, options["idPath"]);
+		let idKeys = explode(".", options["idPath"]);
+		array_shift(idKeys);
+		let parentKeys = explode(".", options["parentPath"]);
+		array_shift(parentKeys);
+
+		for result in data {
+			let result[options["children"]] = [];
+			let id = self::get(result, idKeys);
+			let parentId = self::get(result, parentKeys);
+
+			if isset idMap[id][options["children"]] {
+				let idMap[id] = array_merge(result, typeof idMap[id] === "array" ? idMap[id] : [idMap[id]]);
+			} else {
+				let tmp = [];
+				let tmp[options["children"]] = [];
+				let idMap[id] = array_merge(result, tmp);
+			}
+			if !parentId || !in_array(parentId, ids) {
+				let output[] = idMap[id];
+			} else {
+				let idMap[parentId][options["children"]][] = idMap[id];
+			}
+		}
+
+		if options["root"] {
+			let root = options["root"];
+		} else {
+			if !output {
+				return [];
+			} else {
+				let root = self::get(output[0], parentKeys);
+			}
+		}
+
+		for i, result in output {
+			let id = self::get(result, idKeys);
+			let parentId = self::get(result, parentKeys);
+			if id !== root && parentId != root {
+				unset output[i];
+			}
+		}
+		return array_values(output);
+*/
+	}
+
 }
