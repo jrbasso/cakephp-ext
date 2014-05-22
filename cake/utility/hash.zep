@@ -16,7 +16,7 @@ class Hash {
 		}
 
 		if isString || is_numeric(path) {
-			let parts = explode(".", path);
+			let parts = explode(".", (string)path);
 		} else {
 			let parts = path;
 		}
@@ -38,17 +38,17 @@ class Hash {
 			return data;
 		}
 
-/**
-	Commenting this part out because the return is causing PHP to crash.
-	This piece of code is just for optimization, so the functionality will
-	work anyway.
-	It seems to be some bug on zephir.
-
 		if !memstr(path, "{") && !memstr(path, "[") {
 			let tmp = self::get(data, path);
-			return is_array(tmp) ? tmp : [tmp];
+			if typeof tmp === "array" {
+				return tmp;
+			} else {
+				if typeof tmp === "null" {
+					return [];
+				}
+				return [tmp];
+			}
 		}
-*/
 
 		if strpos(path, "[") === false {
 			let tokens = explode(".", path);
@@ -137,18 +137,21 @@ class Hash {
 			}
 
 			// Empty attribute = fail.
-			if !isset data[attr] {
+			if !(isset data[attr] || array_key_exists(attr, data)) {
 				return false;
 			}
 
-			let prop = data[attr];
+			let prop = null;
+			if isset data[attr] {
+				let prop = data[attr];
+			}
 			if prop === true || prop === false {
-				return prop ? "true" : "false";
+				let prop = prop ? "true" : "false";
 			}
 
 			// Pattern matches and other operators.
-			if op === "=" && val && val[0] === "/" {
-				if preg_match(val, prop) {
+			if op === "=" && val && substr(val, 0, 1) === "/" {
+				if !preg_match(val, prop) {
 					return false;
 				}
 			} else {
@@ -223,12 +226,12 @@ class Hash {
 		let key = array_shift(path);
 
 		if op === "insert" {
+			if !isset data[key] || typeof data[key] !== "array" {
+				let data[key] = [];
+			}
 			if count === 1 {
 				let data[key] = values;
 			} else {
-				if !isset data[key] {
-					let data[key] = [];
-				}
 				let data[key] = self::_simpleOp(op, data[key], path, values);
 			}
 			return data;
@@ -249,7 +252,7 @@ class Hash {
 
 	public static function remove(data, string path) -> array {
 		bool noTokens, noExpansion;
-		var tokens, token, nextPath, tmp, conditions, k, v, match;
+		var tokens, token, nextPath, tmp, conditions, k, v, match, newData;
 
 		let noTokens = !memstr(path, "[");
 		let noExpansion = !memstr(path, "{");
@@ -277,24 +280,25 @@ class Hash {
 		let token = tmp[0];
 		let conditions = tmp[1];
 
+		let newData = data;
 		for k, v in data {
 			let match = self::_matchToken(k, token);
 			if match && typeof v === "array" {
 				if conditions && self::_matches(v, conditions) {
-					unset data[k];
+					unset newData[k];
 					continue;
 				}
-				let data[k] = self::remove(v, nextPath);
-				if empty data[k] {
-					unset data[k];
+				let newData[k] = self::remove(v, nextPath);
+				if empty newData[k] {
+					unset newData[k];
 				}
 			} else {
 				if match {
-					unset data[k];
+					unset newData[k];
 				}
 			}
 		}
-		return data;
+		return newData;
 	}
 
 	public static function combine(data, keyPath, valuePath = null, groupPath = null) -> array {
@@ -488,7 +492,7 @@ class Hash {
 		var result = [], flat, value, keys, child = [], tmp, k;
 
 		for flat, value in data {
-			let keys = explode(separator, flat);
+			let keys = explode(separator, (string)flat);
 			let keys = array_reverse(keys);
 			let child = [];
 			let child[keys[0]] = value;
@@ -598,7 +602,7 @@ class Hash {
 	}
 
 	public static function sort(data, path, dir, type = "regular") -> array {
-		var originalKeys, numeric, sortValues, sortCount, dataCount, result, keys, values, sorted = [], k;
+		var originalKeys, numeric, sortValues, sortCount, dataCount, result, keys, values, sorted = [], k, typeValue;
 
 		if empty data {
 			return [];
@@ -624,19 +628,19 @@ class Hash {
 		let type = strtolower(type);
 
 		if type === "numeric" {
-			let type = SORT_NUMERIC;
+			let typeValue = SORT_NUMERIC;
 		} else {
 			if type === "string" {
-				let type = SORT_STRING;
+				let typeValue = SORT_STRING;
 			} else {
 				if type === "natural" {
-					let type = SORT_NATURAL;
+					let typeValue = SORT_NATURAL;
 				} else {
-					let type = SORT_REGULAR;
+					let typeValue = SORT_REGULAR;
 				}
 			}
 		}
-		array_multisort(values, dir, type, keys, dir, type);
+		array_multisort(values, dir, typeValue, keys, dir, typeValue);
 		let keys = array_unique(keys);
 
 		for k in keys {
