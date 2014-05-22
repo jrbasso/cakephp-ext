@@ -746,9 +746,8 @@ class Hash {
 	}
 
 	public static function nest(data, options = []) -> array {
-		throw new \Exception("Buggy");
-/*
-		var alias, defaultOptions, output = [], idMap = [], ids, idKeys, parentKeys, result, tmp, root, id, parentId, i;
+		var alias, defaultOptions, output = [], newOutput, idMap = [], ids, idKeys, parentKeys, result, tmp, root, id, parentId, i;
+
 		if !data {
 			return data;
 		}
@@ -760,7 +759,7 @@ class Hash {
 			"children": "children",
 			"root": null
 		];
-		let options += defaultOptions;
+		let options = array_merge(defaultOptions, options);
 
 		let ids = self::extract(data, options["idPath"]);
 		let idKeys = explode(".", options["idPath"]);
@@ -797,15 +796,15 @@ class Hash {
 			}
 		}
 
+		let newOutput = output;
 		for i, result in output {
 			let id = self::get(result, idKeys);
 			let parentId = self::get(result, parentKeys);
 			if id !== root && parentId != root {
-				unset output[i];
+				unset newOutput[i];
 			}
 		}
-		return array_values(output);
-*/
+		return array_values(newOutput);
 	}
 
 }
